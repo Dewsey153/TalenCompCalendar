@@ -4,6 +4,7 @@ module DateTime where
 import ParseLib
 import Data.Char
 import Data.List
+import Text.Printf
 
 -- | "Target" datatype for the DateTime parser, i.e, the parser should produce elements of this type.
 data DateTime = DateTime { date :: Date
@@ -79,24 +80,31 @@ printDateTime (DateTime date time utc) = printDate date ++ "T" ++ printTime time
     printDate :: Date -> String
     printDate date = printYear (year date) ++ printMonth (month date) ++ printDay (day date) 
     printYear :: Year -> String
-    printYear year = show $ runYear year
+    printYear year = showFourDigitInt $ runYear year
     printMonth :: Month -> String
-    printMonth month = show $ runMonth month
+    printMonth month = showTwoDigitInt $ runMonth month
     printDay :: Day -> String
-    printDay day = show $ runDay day
+    printDay day = showTwoDigitInt $ runDay day
     printTime :: Time -> String
     printTime (Time hour minute second) = printHour hour ++ printMinute minute ++ printSecond second
     printHour :: Hour -> String
-    printHour hour = show $ runHour hour
+    printHour hour = showTwoDigitInt $ runHour hour
     printMinute :: Minute -> String
-    printMinute minute = show $ runMinute minute
+    printMinute minute = showTwoDigitInt $ runMinute minute
     printSecond :: Second -> String
-    printSecond second = show $ runSecond second
+    printSecond second = showTwoDigitInt $ runSecond second
     printUtc :: Bool -> String
-    printUtc value 
+    printUtc value
       | value     = "Z"
       | otherwise = ""
-    
+
+showFourDigitInt :: Int -> String
+showFourDigitInt = printf "%04d"
+
+
+showTwoDigitInt :: Int -> String
+showTwoDigitInt = printf "%02d"
+
 -- Exercise 4
 parsePrint s = fmap printDateTime $ run parseDateTime s
 
