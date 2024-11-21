@@ -122,3 +122,9 @@ parsePrint s = fmap printDateTime $ run parseDateTime s
 -- Exercise 5
 checkDateTime :: DateTime -> Bool
 checkDateTime = undefined
+
+leapYear :: Year -> Bool
+leapYear y | runYear y `mod` 400 == 0 = True
+           | runYear y `mod` 100 == 0 = False
+           | runYear y `mod` 4 == 0 = True
+           | otherwise = False
