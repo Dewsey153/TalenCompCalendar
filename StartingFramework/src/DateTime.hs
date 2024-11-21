@@ -121,4 +121,36 @@ parsePrint s = fmap printDateTime $ run parseDateTime s
 
 -- Exercise 5
 checkDateTime :: DateTime -> Bool
-checkDateTime = undefined
+checkDateTime datetime = checkDate (date datetime) && checkTime (time datetime)
+  where
+    checkDate :: Date -> Bool
+    checkDate date = checkYear (year date) && checkMonth (month date) && checkDay date
+
+    checkYear :: Year -> Bool
+    checkYear year = let ry = runYear year in checkInRange ry (0, 9999)
+    checkMonth :: Month -> Bool
+    checkMonth month = let m = runMonth month in checkInRange m (1, 12) 
+    checkDay :: Date -> Bool
+    checkDay d | m == 2 = checkDayFebruary d
+               | m == 4 || m == 6 || m == 9 || m == 11 = checkInRange (runDay (day d)) (1, 30)
+               | otherwise = checkInRange (runDay (day d)) (1, 31)
+      where
+        m = month d
+    
+    checkDayFebruary :: Date -> Bool
+    checkDayFebruary date | leapYear (year date) = checkInRange (runDay (day date)) (1, 29)
+                          | otherwise = checkInRange (runDay (day date)) (1, 28)
+
+    checkTime :: Time -> Bool
+    checkTime time = checkHour (hour time) && checkMinute (minute time) && checkSecond (second time)
+
+    checkHour :: Hour -> Bool
+    checkHour hour = let h = runHour hour in checkInRange h (0, 23)
+    checkMinute :: Minute -> Bool
+    checkMinute minute = let m = runMinute in checkInRange h (0, 59)
+    checkSecond :: Second -> Bool
+    checkSecond second = let s = runSecond second in checkInRange h (0, 59)
+
+-- Check whether x is between l and h. l and h are inclusive.
+checkInRange :: Int -> (Int, Int) -> Bool
+checkInRange x (l, h) = x >= l && x <= h
