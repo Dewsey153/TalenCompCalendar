@@ -5,6 +5,7 @@ import ParseLib
 import Data.Char
 import Data.List
 import Text.Printf
+import Control.Applicative
 
 -- | "Target" datatype for the DateTime parser, i.e, the parser should produce elements of this type.
 data DateTime = DateTime { date :: Date
@@ -32,6 +33,7 @@ newtype Second = Second { runSecond :: Int } deriving (Eq, Ord)
 
 
 -- Exercise 1
+-- parse a string describing a DateTime value to DateTime
 parseDateTime :: Parser Char DateTime
 parseDateTime = (\date _ time utc -> DateTime date time utc) <$> parseDate <*> symbol 'T' <*> parseTime <*> parseUtc
   where
@@ -53,13 +55,17 @@ parseDateTime = (\date _ time utc -> DateTime date time utc) <$> parseDate <*> s
     parseSecond :: Parser Char Second
     parseSecond = Second <$> parseTwoDigitInt
 
+    -- True if a 'Z' symbol is present, else False
     parseUtc :: Parser Char Bool
-    parseUtc = const True <$> symbol 'Z'
+    parseUtc = True <$ symbol 'Z' <<|> succeed False
 
+-- parse a number which is two digits long
 parseTwoDigitInt :: Parser Char Int
 parseTwoDigitInt = (\x1 x2 -> x1 * 10 + x2) <$> newdigit <*> newdigit
 
 -- Exercise 2
+-- Run a parser. Return Nothing if the input could not be parsed with an empty tail. 
+--  Return the first correct parsing with an empty tail if the input could be parsed.
 run :: Parser a b -> [a] -> Maybe b
 run parser input =
   let
@@ -74,6 +80,7 @@ run parser input =
     convertResult
 
 -- Exercise 3
+-- Convert a DateTime into a String
 printDateTime :: DateTime -> String
 printDateTime (DateTime date time utc) = printDate date ++ "T" ++ printTime time ++ printUtc utc
   where
@@ -85,6 +92,7 @@ printDateTime (DateTime date time utc) = printDate date ++ "T" ++ printTime time
     printMonth month = showTwoDigitInt $ runMonth month
     printDay :: Day -> String
     printDay day = showTwoDigitInt $ runDay day
+
     printTime :: Time -> String
     printTime (Time hour minute second) = printHour hour ++ printMinute minute ++ printSecond second
     printHour :: Hour -> String
@@ -93,15 +101,18 @@ printDateTime (DateTime date time utc) = printDate date ++ "T" ++ printTime time
     printMinute minute = showTwoDigitInt $ runMinute minute
     printSecond :: Second -> String
     printSecond second = showTwoDigitInt $ runSecond second
+
     printUtc :: Bool -> String
     printUtc value
       | value     = "Z"
       | otherwise = ""
 
+-- Convert an integer with not more than 4 digits into a 4 char long string, 
+-- possibly with leading zeros 
 showFourDigitInt :: Int -> String
 showFourDigitInt = printf "%04d"
 
-
+-- Does the same as showFourDigitInt, but for for 2 digits in stead of 4 digits.
 showTwoDigitInt :: Int -> String
 showTwoDigitInt = printf "%02d"
 
