@@ -43,7 +43,7 @@ parseDateTime = (\date _ time utc -> DateTime date time utc) <$> parseDate <*> s
     parseTime = Time <$> parseHour <*> parseMinute <*> parseSecond
     parseYear :: Parser Char Year
     parseYear = (\x1 x2 x3 x4 -> Year (x1 * 1000 + x2 * 100 + x3 * 10 + x4)) <$> newdigit <*> newdigit <*> newdigit <*> newdigit
-
+    
     parseMonth :: Parser Char Month
     parseMonth = Month <$> parseTwoDigitInt
     parseDay :: Parser Char Day
@@ -85,7 +85,7 @@ printDateTime :: DateTime -> String
 printDateTime (DateTime date time utc) = printDate date ++ "T" ++ printTime time ++ printUtc utc
   where
     printDate :: Date -> String
-    printDate date = printYear (year date) ++ printMonth (month date) ++ printDay (day date)
+    printDate date = printYear (year date) ++ printMonth (month date) ++ printDay (day date) 
     printYear :: Year -> String
     printYear year = showFourDigitInt $ runYear year
     printMonth :: Month -> String
@@ -117,16 +117,8 @@ showTwoDigitInt :: Int -> String
 showTwoDigitInt = printf "%02d"
 
 -- Exercise 4
-parsePrint :: [Char] -> Maybe String
 parsePrint s = fmap printDateTime $ run parseDateTime s
 
 -- Exercise 5
 checkDateTime :: DateTime -> Bool
 checkDateTime = undefined
-
-leapYear :: Year -> Bool
-leapYear y | runYear y `mod` 400 == 0 = True
-           | runYear y `mod` 100 == 0 = False
-           | runYear y `mod` 4 == 0 = True
-           | otherwise = False
-
