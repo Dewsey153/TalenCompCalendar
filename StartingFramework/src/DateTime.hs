@@ -154,3 +154,9 @@ checkDateTime datetime = checkDate (date datetime) && checkTime (time datetime)
 -- Check whether x is between l and h. l and h are inclusive.
 checkInRange :: Int -> (Int, Int) -> Bool
 checkInRange x (l, h) = x >= l && x <= h
+
+leapYear :: Year -> Bool
+leapYear y | runYear y `mod` 400 == 0 = True
+           | runYear y `mod` 100 == 0 = False
+           | runYear y `mod` 4 == 0 = True
+           | otherwise = False
