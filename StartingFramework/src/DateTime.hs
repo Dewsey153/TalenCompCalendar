@@ -117,6 +117,7 @@ showTwoDigitInt :: Int -> String
 showTwoDigitInt = printf "%02d"
 
 -- Exercise 4
+parsePrint :: [Char] -> Maybe String
 parsePrint s = fmap printDateTime $ run parseDateTime s
 
 -- Exercise 5
@@ -135,7 +136,7 @@ checkDateTime datetime = checkDate (date datetime) && checkTime (time datetime)
                | m == 4 || m == 6 || m == 9 || m == 11 = checkInRange (runDay (day d)) (1, 30)
                | otherwise = checkInRange (runDay (day d)) (1, 31)
       where
-        m = month d
+        m = runMonth $ month d
     
     checkDayFebruary :: Date -> Bool
     checkDayFebruary date | leapYear (year date) = checkInRange (runDay (day date)) (1, 29)
@@ -147,9 +148,9 @@ checkDateTime datetime = checkDate (date datetime) && checkTime (time datetime)
     checkHour :: Hour -> Bool
     checkHour hour = let h = runHour hour in checkInRange h (0, 23)
     checkMinute :: Minute -> Bool
-    checkMinute minute = let m = runMinute in checkInRange h (0, 59)
+    checkMinute minute = let m = runMinute minute in checkInRange m (0, 59)
     checkSecond :: Second -> Bool
-    checkSecond second = let s = runSecond second in checkInRange h (0, 59)
+    checkSecond second = let s = runSecond second in checkInRange s (0, 59)
 
 -- Check whether x is between l and h. l and h are inclusive.
 checkInRange :: Int -> (Int, Int) -> Bool
