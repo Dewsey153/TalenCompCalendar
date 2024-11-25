@@ -5,10 +5,45 @@ import DateTime
 
 
 -- Exercise 6
-data Calendar = Calendar
+data Calendar = Calendar [Calprop] [Event]
     deriving (Eq, Ord, Show)
 
-data Event = Event
+data Calprop = Calprop ProdID Version
+    deriving (Eq, Ord, Show)
+
+data ProdID = ProdID String
+    deriving (Eq, Ord, Show)
+
+data Version = Version
+    deriving (Eq, Ord, Show)
+
+data Event = Event [EventProp]
+    deriving (Eq, Ord, Show)
+
+data EventProp = PropDtStamp DtStamp | PropUid Uid | PropDtStart DtStart 
+  | PropDtEnd DtEnd | PropDescription Description | PropSummary Summary 
+  | PropLocation Location
+  deriving (Eq, Ord, Show)
+
+data DtStamp = DtStamp DateTime
+    deriving (Eq, Ord, Show)
+
+data Uid = Uid String
+    deriving (Eq, Ord, Show)
+
+data DtStart = DtStart DateTime
+    deriving (Eq, Ord, Show)
+
+data DtEnd = DtEnd DateTime
+    deriving (Eq, Ord, Show)
+
+data Description = Description String
+    deriving (Eq, Ord, Show)
+
+data Summary = Summary String
+    deriving (Eq, Ord, Show)
+
+data Location = Location String
     deriving (Eq, Ord, Show)
 
 -- Exercise 7
