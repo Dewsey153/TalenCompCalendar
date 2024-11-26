@@ -91,36 +91,44 @@ recognizeCalendar :: String -> Maybe Calendar
 recognizeCalendar s = run lexCalendar s >>= run parseCalendar
 
 -- Exercise 8
+-- Turns a calendar into a valid input string
 printCalendar :: Calendar -> String
-printCalendar calendar = intercalate "\r\n" $ cutStrings 42 $ splitOn "\r\n" $ printCalendar' calendar
+printCalendar calendar = cutLongLines 42 $ printCalendar' calendar
     where 
-        cutStrings :: Int -> [String] -> [String]
-        cutStrings _ []      = []
-        cutStrings x (s : ss) | length s > x = let (s1, s2) = splitAt x s in s1 : cutStrings x (s2 : ss)
-                              | otherwise = s : cutStrings x ss
+        -- If any line (characters between occurences of "\r\n") is beyond x 
+        -- chars long, add "\r\n " to avoid long lines.
+        cutLongLines :: Int -> String -> String
+        cutLongLines x = intercalate "\r\n" . map (cutString x) . splitOn "\r\n"
+        
+        -- If the string is beyond x chars long, add "\r\n " after x characters.
+        -- Do this until each line is max 42 chars long. 
+        cutString :: Int -> String -> String
+        cutString x s   | length s > x = let (s1, s2) = splitAt x s in s1 ++ "\r\n" ++ cutString x (' ': s2)
+                        | otherwise    = s
 
-printCalendar' :: Calendar -> String
-printCalendar' (Calendar prop1 prop2 events) =
-    "BEGIN:CALENDAR\r\n" ++ printCalProp prop1 ++ printCalProp prop2 ++ printEvents events ++ "END:CALENDAR\r\n"
-    where
-        printCalProp :: CalProp -> String
-        printCalProp (CalPropID id) = "PRODID:" ++ runProdID id ++ "\r\n"
-        printCalProp (CalPropVersion version) = "VERSION:2.0\r\n"
+        -- Actually turns a calendar into a string
+        printCalendar' :: Calendar -> String
+        printCalendar' (Calendar prop1 prop2 events) =
+            "BEGIN:CALENDAR\r\n" ++ printCalProp prop1 ++ printCalProp prop2 ++ printEvents events ++ "END:CALENDAR\r\n"
+            where
+                printCalProp :: CalProp -> String
+                printCalProp (CalPropID id) = "PRODID:" ++ runProdID id ++ "\r\n"
+                printCalProp (CalPropVersion version) = "VERSION:2.0\r\n"
 
-        printEvents :: [Event] -> String
-        printEvents = concatMap printEvent
+                printEvents :: [Event] -> String
+                printEvents = concatMap printEvent
 
-        printEvent :: Event -> String
-        printEvent (Event props) = "BEGIN:EVENT\r\n" ++ concatMap printEventProp props ++ "END:EVENT\r\n"
+                printEvent :: Event -> String
+                printEvent (Event props) = "BEGIN:EVENT\r\n" ++ concatMap printEventProp props ++ "END:EVENT\r\n"
 
-        printEventProp :: EventProp -> String
-        printEventProp eProp = printEventProp' eProp ++ "\r\n"
+                printEventProp :: EventProp -> String
+                printEventProp eProp = printEventProp' eProp ++ "\r\n"
 
-        printEventProp' :: EventProp -> String
-        printEventProp' (PropDtStamp stamp) = "DTSTAMP:" ++ printDateTime (runDtStamp stamp)
-        printEventProp' (PropUid uid) = "UID:" ++ runUid uid
-        printEventProp' (PropDtStart start) = "DTSTART:" ++ printDateTime (runDtStart start)
-        printEventProp' (PropDtEnd end) = "DTEND:" ++ printDateTime (runDtEnd end)
-        printEventProp' (PropDescription descr) = "DESCRIPTION:" ++ runDescription descr
-        printEventProp' (PropSummary summ) = "SUMMARY:" ++ runSummary summ
-        printEventProp' (PropLocation loc) = "LOCATION:" ++ runLocation loc
+                printEventProp' :: EventProp -> String
+                printEventProp' (PropDtStamp stamp) = "DTSTAMP:" ++ printDateTime (runDtStamp stamp)
+                printEventProp' (PropUid uid) = "UID:" ++ runUid uid
+                printEventProp' (PropDtStart start) = "DTSTART:" ++ printDateTime (runDtStart start)
+                printEventProp' (PropDtEnd end) = "DTEND:" ++ printDateTime (runDtEnd end)
+                printEventProp' (PropDescription descr) = "DESCRIPTION:" ++ runDescription descr
+                printEventProp' (PropSummary summ) = "SUMMARY:" ++ runSummary summ
+                printEventProp' (PropLocation loc) = "LOCATION:" ++ runLocation loc
