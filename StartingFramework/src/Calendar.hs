@@ -6,6 +6,8 @@ import ParseLib
 import DateTime
 import Data.List.Split
 import Data.List
+import Control.Applicative
+import Data.Char
 
 -- Exercise 6
 data Calendar = Calendar { prop1 :: CalProp, prop2 :: CalProp, events :: [Event] }
@@ -51,11 +53,36 @@ data Location = Location{runLocation :: String}
     deriving (Eq, Ord, Show)
 
 -- Exercise 7
-data Token = Token
+data Token = Begin | End | Title String | Content String | Section Section
+    deriving (Eq, Ord, Show)
+
+data Section = VCalendar | VEvent
     deriving (Eq, Ord, Show)
 
 lexCalendar :: Parser Char [Token]
-lexCalendar = undefined
+lexCalendar = greedy parseToken
+    where
+        -- input contains "\r\n"
+        parseToken :: Parser Char Token
+        -- If the text is not a title, check whether it is a section. If not, it must be content.
+        -- This is to prevent that sections or titles get parsed as content.
+        parseToken = parseBegin <|> parseEnd <|> (parseTitle <<|> (parseSection <<|> parseContent))
+
+        parseBegin :: Parser Char Token
+        parseBegin =  Begin <$ token "BEGIN:"
+        parseEnd :: Parser Char Token
+        parseEnd =  End <$ token "END:"
+        parseTitle :: Parser Char Token
+        parseTitle = Title <$> greedy1 (satisfy isUpper) <* symbol ':'
+        parseContent :: Parser Char Token
+        parseContent = Content <$> parseText
+        parseSection :: Parser Char Token
+        parseSection = (succeed (Section VCalendar) <* token "VCALENDAR\r\n")
+            <|> (succeed (Section VEvent) <* token "VEVENT\r\n")
+
+-- Parse a text ending on \r\n possibly on multiple lines, with a space after every "\r\n".
+parseText :: Parser Char String
+parseText = (++) <$> greedy (satisfy (/='\r')) <*> ((token "\r\n " *> parseText) <<|> "" <$ token "\r\n")
 
 parseCalendar :: Parser Token Calendar
 parseCalendar = undefined
