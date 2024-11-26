@@ -19,7 +19,7 @@ findEvents dt calendar = filter (dateTimeInEvent dt) allEvents
 
 -- True if the given date time is during the event
 dateTimeInEvent :: DateTime -> Event -> Bool
-dateTimeInEvent dt e = 
+dateTimeInEvent dt e =
     let
         eventTimes = startEndDateTime e
     in
@@ -35,25 +35,17 @@ startEndDateTime :: Event -> (DateTime, DateTime)
 startEndDateTime event = (startDateTime event, endDateTime event)
 
 startDateTime :: Event -> DateTime
-startDateTime (Event props) = 
+startDateTime event =
     let
-        (PropDtStart start) = fromJust $ find isPropDtStart props
-    in 
+         start = dtStart event
+    in
         runDtStart start
 
 endDateTime :: Event -> DateTime
-endDateTime (Event props) = 
+endDateTime event =
     let
-        (PropDtEnd end)   = fromJust $ find isPropDtEnd   props
+        end   = dtEnd event
     in runDtEnd end
-
-isPropDtStart :: EventProp -> Bool
-isPropDtStart (PropDtStart _) = True
-isPropDtStart _               = False
-
-isPropDtEnd :: EventProp -> Bool
-isPropDtEnd (PropDtEnd _) = True
-isPropDtEnd _             = False
 
 -- True if any event overlaps with another
 checkOverlapping :: Calendar -> Bool
@@ -64,29 +56,23 @@ checkOverlapping calendar = any (eventOverlaps calendar) (events calendar)
         -- If this is the case, events do overlap.
         -- If this is not the case, events do not overlap.
         eventOverlaps :: Calendar -> Event -> Bool
-        eventOverlaps c e = any (dateTimeInEvent (startDateTime e)) (events c)  
+        eventOverlaps c e = any (dateTimeInEvent (startDateTime e)) (events c)
 
 timeSpent :: String -> Calendar -> Int
 timeSpent sum cal = undefined
 
 -- Get list of events from calendar with the given summary
 eventsWithSummary :: String -> Calendar -> [Event]
-eventsWithSummary sum cal = filter 
-    (\e -> 
-    let summary = getEventSummary e 
-    in isJust summary && sum == runSummary (fromJust summary)) 
+eventsWithSummary sum cal = filter
+    (\e ->
+    let summary = getEventSummary e
+    in isJust summary && sum == runSummary (fromJust summary))
     (events cal)
 
 -- Get the summary from the event, if any exists
 getEventSummary :: Event -> Maybe Summary
-getEventSummary (Event props) = do
-    (PropSummary summary) <- find isPropSummary props
-    return summary 
-
--- True if the given EventProp is a PropSummary
-isPropSummary :: EventProp -> Bool
-isPropSummary (PropSummary _) = True
-isPropSummary _               = False
+getEventSummary event = do
+    summary event
 
 timeSpanToMinutes :: DateTime -> DateTime -> Int
 timeSpanToMinutes x y = undefined
