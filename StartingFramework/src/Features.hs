@@ -83,12 +83,10 @@ getEventSummary event = do
     summary event
 
 timeSpanToMinutes :: DateTime -> DateTime -> Int
-timeSpanToMinutes x y = abs (dateMinutes dateTime1 - dateMinutes dateTime2)
+timeSpanToMinutes x y = dateMinutes dateTime2 - dateMinutes dateTime1
     where
         dateTime1 = min x y
         dateTime2 = max x y
-        dateDifference :: DateTime -> DateTime -> Int
-        dateDifference d1 d2 = dateMinutes d2 - dateMinutes d1
         daysInMonth :: Year -> Int -> Int
         daysInMonth year month
             | month == 2 && leapYear year = 29
