@@ -8,7 +8,7 @@ import GHC.Base (undefined)
 import GHC.Float (double2Float)
 
 -- Exercise 9
--- Count how many events are in the calendar
+-- Count the number of events in the calendar
 countEvents :: Calendar -> Int
 countEvents calendar = length $ events calendar
 

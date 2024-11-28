@@ -102,7 +102,7 @@ parseCalendar = pack parseBeginCalendar parseCalendar' parseEndCalendar
         parseEndCalendar = symbol End *> symbol (Section VCalendar)
 
         parseCalendar' :: Parser Token Calendar
-        parseCalendar'= toCalendar <$> (parseProdID <|> parseVersion) <*> (parseProdID <|> parseVersion) <*> many parseEvent
+        parseCalendar'= toCalendar <$> (parseProdID <|> parseVersion) <*> (parseProdID <|> parseVersion) <*> greedy parseEvent
 
         -- Provided id or version in any order and a list of event, returns calendar
         toCalendar :: CalProp -> CalProp -> [Event] -> Calendar
@@ -122,7 +122,7 @@ parseEvent = pack parseBeginEvent parseEvent' parseEndEvent
         parseBeginEvent = symbol Begin *> symbol (Section VEvent)
 
         parseEvent' :: Parser Token Event
-        parseEvent' = ePropsToEvent <$> many parseEventProp
+        parseEvent' = ePropsToEvent <$> greedy parseEventProp
 
         ePropsToEvent :: [EventProp] -> Event
         ePropsToEvent eventprops = Event eDtStamp eUid eDtStart eDtEnd eDescription eSummary eLocation
