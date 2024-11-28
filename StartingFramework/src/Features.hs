@@ -98,8 +98,8 @@ timeSpanToMinutes x y = dateMinutes dateTime2 - dateMinutes dateTime1
             | otherwise = 365
         dateMinutes :: DateTime -> Int
         dateMinutes d =
-            let totalDays = sum [daysInYear y | y <- [1..(runYear(year thisDate))]] + sum [daysInMonth (year thisDate) m | m <- [1..(runMonth(month thisDate)-1)]] + (runDay(day thisDate) - 1)
-                totalMinutes = totalDays * 1440 + runHour (hour thisTime) * 60 + runMinute(minute thisTime) + runSecond(second thisTime) `div` 60 -- 1440 minutes in a day
+            let totalDays = sum [daysInYear y | y <- [1..(runYear(year thisDate)) - 1]] + sum [daysInMonth (year thisDate) m | m <- [1..(runMonth(month thisDate)-1)]] + (runDay(day thisDate) - 1)
+                totalMinutes = totalDays * 1440 + runHour (hour thisTime) * 60 + runMinute(minute thisTime) -- 1440 minutes in a day
             in totalMinutes
                 where
                     thisDate = date d
