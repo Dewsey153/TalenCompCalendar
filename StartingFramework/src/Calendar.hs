@@ -86,7 +86,7 @@ lexCalendar = greedy lexToken
         lexSection = (succeed (Section VCalendar) <* token "VCALENDAR\r\n")
             <|> (succeed (Section VEvent) <* token "VEVENT\r\n")
         lexDateTime :: Parser Char Token
-        lexDateTime = DateTimeToken <$> parseDateTime
+        lexDateTime = DateTimeToken <$> (parseDateTime <* token "\r\n")
 
 -- Parse a text ending on \r\n possibly on multiple lines, with a space after every "\r\n".
 parseText :: Parser Char String
