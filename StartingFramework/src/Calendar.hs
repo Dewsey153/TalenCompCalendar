@@ -309,7 +309,7 @@ printCalendar calendar = cutLongLines 42 $ printCalendar' calendar
         -- Actually turns a calendar into a string
         printCalendar' :: Calendar -> String
         printCalendar' (Calendar id version events) =
-            "BEGIN:CALENDAR\r\n" ++ printProdID id ++ printVersion ++ printEvents events ++ "END:CALENDAR\r\n"
+            "BEGIN:VCALENDAR\r\n" ++ printProdID id ++ printVersion ++ printEvents events ++ "END:VCALENDAR\r\n"
             where
                 printProdID :: ProdID -> String
                 printProdID (ProdID prodID) = "PRODID:" ++ runProdID id ++ "\r\n"
@@ -320,9 +320,19 @@ printCalendar calendar = cutLongLines 42 $ printCalendar' calendar
                 printEvents = concatMap printEvent
 
                 printEvent :: Event -> String
-                printEvent (Event dtStamp uid dtStart dtEnd description summary location ) = "BEGIN:EVENT\r\n" ++ printDtStamp dtStamp ++ printUID uid ++ printDtStart dtStart ++ printDtEnd dtEnd ++ printDescription description ++ printSummary summary ++ printLocation location ++ "END:EVENT\r\n"
+                printEvent (Event dtStamp uid dtStart dtEnd description summary location) = 
+                    "BEGIN:VEVENT\r\n" 
+                    ++ printDtStamp dtStamp
+                    ++ printUID uid
+                    ++ printDtStart dtStart
+                    ++ printDtEnd dtEnd
+                    ++ printDescription description
+                    ++ printSummary summary
+                    ++ printLocation location
+                    ++ "END:VEVENT\r\n"
+
                 printDtStamp :: DtStamp -> String
-                printDtStamp stamp = "DTSTAMP" ++ printDateTime (runDtStamp stamp) ++ "\r\n"
+                printDtStamp stamp = "DTSTAMP:" ++ printDateTime (runDtStamp stamp) ++ "\r\n"
                 printUID :: Uid -> String
                 printUID uid = "UID:" ++ runUid uid ++ "\r\n"
                 printDtStart :: DtStart -> String
