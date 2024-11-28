@@ -26,10 +26,10 @@ dateTimeInEvent dt e =
     in
         dateTimeBetween dt eventTimes
 
--- True if the first DateTime falls between the range given by the tuple.
--- Assume that start is before end.
+-- True if the first DateTime falls between the range (start inclusive, end exclusive)
+-- given by the tuple. Assume that start is before end.
 dateTimeBetween :: DateTime -> (DateTime, DateTime) -> Bool
-dateTimeBetween dateTime (start, end) = start <= dateTime && dateTime <= end
+dateTimeBetween dateTime (start, end) = start <= dateTime && dateTime < end
 
 -- Get start and end DateTime from Event
 startEndDateTime :: Event -> (DateTime, DateTime)
@@ -57,7 +57,7 @@ checkOverlapping calendar = any (eventOverlaps calendar) (events calendar)
         -- If this is the case, events do overlap.
         -- If this is not the case, events do not overlap.
         eventOverlaps :: Calendar -> Event -> Bool
-        eventOverlaps c e = any (dateTimeInEvent (startDateTime e)) (events c)
+        eventOverlaps c e = any (\ev -> ev /= e && dateTimeInEvent (startDateTime e) ev) (events c)
 
 timeSpent :: String -> Calendar -> Int
 timeSpent summ cal = sum $ map timeSpentEvent matchingEvents
