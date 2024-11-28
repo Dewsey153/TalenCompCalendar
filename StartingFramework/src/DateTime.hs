@@ -6,6 +6,7 @@ import Data.Char
 import Data.List
 import Text.Printf
 import Control.Applicative
+import Data.Maybe
 
 -- | "Target" datatype for the DateTime parser, i.e, the parser should produce elements of this type.
 data DateTime = DateTime { date :: Date

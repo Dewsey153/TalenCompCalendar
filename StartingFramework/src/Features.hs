@@ -4,7 +4,8 @@ import DateTime
 import Calendar
 import Data.List
 import Data.Maybe
-
+import GHC.Base (undefined)
+import GHC.Float (double2Float)
 
 -- Exercise 9
 -- Count how many events are in the calendar
@@ -59,7 +60,14 @@ checkOverlapping calendar = any (eventOverlaps calendar) (events calendar)
         eventOverlaps c e = any (dateTimeInEvent (startDateTime e)) (events c)
 
 timeSpent :: String -> Calendar -> Int
-timeSpent sum cal = undefined
+timeSpent summ cal = sum $ map timeSpentEvent matchingEvents
+    where matchingEvents = eventsWithSummary summ cal
+
+timeSpentEvent :: Event -> Int
+timeSpentEvent e = timeSpanToMinutes d1 d2
+    where
+        d1 = runDtStart(dtStart e)
+        d2 = runDtEnd(dtEnd e)
 
 -- Get list of events from calendar with the given summary
 eventsWithSummary :: String -> Calendar -> [Event]
@@ -75,15 +83,27 @@ getEventSummary event = do
     summary event
 
 timeSpanToMinutes :: DateTime -> DateTime -> Int
-timeSpanToMinutes x y = undefined
+timeSpanToMinutes x y = abs (dateMinutes dateTime1 - dateMinutes dateTime2)
     where
         dateTime1 = min x y
         dateTime2 = max x y
-        date1 = date dateTime1
-        date2 = date dateTime2
-        time1 = time dateTime1
-        time2 = time dateTime2
-        dateDifference :: Date -> Date -> Int
+        dateDifference :: DateTime -> DateTime -> Int
         dateDifference d1 d2 = dateMinutes d2 - dateMinutes d1
-        dateMinutes :: Date -> Int
-        dateMinutes d = undefined -- yearMinutes (year d) + monthMinutes (month d) + runDay (day d) * 1440
+        daysInMonth :: Year -> Int -> Int
+        daysInMonth year month
+            | month == 2 && leapYear year = 29
+            | month == 2 = 28
+            | month == 4 || month == 6 || month == 9 || month == 11 = 30
+            | otherwise = 31
+        daysInYear :: Int -> Int
+        daysInYear y
+            | leapYear (Year y) = 366
+            | otherwise = 365
+        dateMinutes :: DateTime -> Int
+        dateMinutes d =
+            let totalDays = sum [daysInYear y | y <- [1..(runYear(year thisDate))]] + sum [daysInMonth (year thisDate) m | m <- [1..(runMonth(month thisDate)-1)]] + (runDay(day thisDate) - 1)
+                totalMinutes = totalDays * 1440 + runHour (hour thisTime) * 60 + runMinute(minute thisTime) + runSecond(second thisTime) `div` 60 -- 1440 minutes in a day
+            in totalMinutes
+                where
+                    thisDate = date d
+                    thisTime = time d

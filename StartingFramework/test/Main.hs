@@ -13,7 +13,7 @@ import Calendar
 import Features
 import System.Environment
 import System.IO
-
+import Data.Maybe
 
 data Result = SyntaxError | Invalid DateTime | Valid DateTime deriving (Eq, Ord)
 
