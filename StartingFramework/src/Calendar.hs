@@ -58,7 +58,8 @@ data Location = Location {runLocation :: String}
     deriving (Eq, Ord, Show)
 
 -- Exercise 7
-data Token = Begin | End | Title String | Content String | Section Section
+data Token = Begin | End | Title String | Content String | Section Section 
+    | DateTimeToken DateTime
     deriving (Eq, Ord, Show)
 
 data Section = VCalendar | VEvent
@@ -71,7 +72,7 @@ lexCalendar = greedy lexToken
         lexToken :: Parser Char Token
         -- If the text is not a title, check whether it is a section. If not, it must be content.
         -- This is to prevent that sections or titles get parsed as content.
-        lexToken = lexBegin <|> lexEnd <|> (lexTitle <<|> (lexSection <<|> lexContent))
+        lexToken = lexBegin <|> lexEnd <|> (lexTitle <<|> (lexSection <<|> (lexDateTime <<|> lexContent)))
 
         lexBegin :: Parser Char Token
         lexBegin =  Begin <$ token "BEGIN:"
@@ -84,6 +85,8 @@ lexCalendar = greedy lexToken
         lexSection :: Parser Char Token
         lexSection = (succeed (Section VCalendar) <* token "VCALENDAR\r\n")
             <|> (succeed (Section VEvent) <* token "VEVENT\r\n")
+        lexDateTime :: Parser Char Token
+        lexDateTime = DateTimeToken <$> parseDateTime
 
 -- Parse a text ending on \r\n possibly on multiple lines, with a space after every "\r\n".
 parseText :: Parser Char String
@@ -99,12 +102,13 @@ parseCalendar = pack parseBeginCalendar parseCalendar' parseEndCalendar
         parseEndCalendar = symbol End *> symbol (Section VCalendar)
 
         parseCalendar' :: Parser Token Calendar
-        parseCalendar'= f <$> (parseProdID <|> parseVersion) <*> (parseProdID <|> parseVersion) <*> many parseEvent
+        parseCalendar'= toCalendar <$> (parseProdID <|> parseVersion) <*> (parseProdID <|> parseVersion) <*> many parseEvent
 
-        f :: CalProp -> CalProp -> [Event] -> Calendar
-        f (PropProdID id) (PropVersion version) events = Calendar id version events
-        f (PropVersion version) (PropProdID id) events = Calendar id version events
-        f _ _ _ = error "Calendar id or version could not be found." 
+        -- Provided id or version in any order and a list of event, returns calendar
+        toCalendar :: CalProp -> CalProp -> [Event] -> Calendar
+        toCalendar (PropProdID id) (PropVersion version) events = Calendar id version events
+        toCalendar (PropVersion version) (PropProdID id) events = Calendar id version events
+        toCalendar _ _ _ = error "Calendar id or version could not be found." 
         
         parseProdID :: Parser Token CalProp
         parseProdID = (\(Content x) -> PropProdID (ProdID x)) <$> (symbol (Title "PRODID") *> anySymbol)
@@ -234,11 +238,15 @@ parseEvent = pack parseBeginEvent parseEvent' parseEndEvent
         isContent (Content _) = True
         isContent _ = False
 
+        isDateTimeToken :: Token -> Bool
+        isDateTimeToken (DateTimeToken _) = True
+        isDateTimeToken _ = False
+
         parsePropDtStamp :: Parser Token EventProp
-        parsePropDtStamp = stampTokenToProp <$> (symbol (Title "DTSTAMP") *> satisfy isContent)
+        parsePropDtStamp = stampTokenToProp <$> (symbol (Title "DTSTAMP") *> satisfy isDateTimeToken)
 
         stampTokenToProp :: Token -> EventProp
-        stampTokenToProp (Content c) = PropDtStamp (DtStamp (fromJust (run parseDateTime c)))
+        stampTokenToProp (DateTimeToken c) = PropDtStamp (DtStamp c)
 
         parsePropUid :: Parser Token EventProp
         parsePropUid = uidTokenToProp <$> (symbol (Title "UID") *> satisfy isContent)
@@ -247,16 +255,16 @@ parseEvent = pack parseBeginEvent parseEvent' parseEndEvent
         uidTokenToProp (Content c) = PropUid (Uid c)
 
         parsePropDtStart :: Parser Token EventProp
-        parsePropDtStart = startTokenToProp <$> (symbol (Title "DTSTART") *> satisfy isContent)
+        parsePropDtStart = startTokenToProp <$> (symbol (Title "DTSTART") *> satisfy isDateTimeToken)
 
         startTokenToProp :: Token -> EventProp
-        startTokenToProp (Content c) = PropDtStart (DtStart (fromJust (run parseDateTime c)))
+        startTokenToProp (DateTimeToken c) = PropDtStart (DtStart c)
 
         parsePropDtEnd :: Parser Token EventProp
-        parsePropDtEnd = endTokenToProp <$> (symbol (Title "DTEND") *> satisfy isContent)
+        parsePropDtEnd = endTokenToProp <$> (symbol (Title "DTEND") *> satisfy isDateTimeToken)
 
         endTokenToProp :: Token -> EventProp
-        endTokenToProp (Content c) = PropDtEnd (DtEnd (fromJust (run parseDateTime c)))
+        endTokenToProp (DateTimeToken c) = PropDtEnd (DtEnd c)
 
         parsePropDescription :: Parser Token EventProp
         parsePropDescription = descrTokenToProp <$> (symbol (Title "DESCRIPTION") *> satisfy isContent)

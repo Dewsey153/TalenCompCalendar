@@ -79,8 +79,7 @@ eventsWithSummary sum cal = filter
 
 -- Get the summary from the event, if any exists
 getEventSummary :: Event -> Maybe Summary
-getEventSummary event = do
-    summary event
+getEventSummary = summary
 
 timeSpanToMinutes :: DateTime -> DateTime -> Int
 timeSpanToMinutes x y = dateMinutes dateTime2 - dateMinutes dateTime1
