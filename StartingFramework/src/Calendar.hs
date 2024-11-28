@@ -2,6 +2,8 @@
 {-# HLINT ignore "Use newtype instead of data" #-}
 {-# HLINT ignore "Redundant bracket" #-}
 {-# HLINT ignore "Use void" #-}
+{-# LANGUAGE LambdaCase #-}
+{-# LANGUAGE NamedFieldPuns #-}
 module Calendar where
 
 import ParseLib
@@ -11,6 +13,7 @@ import Data.List
 import Control.Applicative
 import Data.Char
 import Control.Monad (replicateM)
+import Data.Maybe
 
 -- Exercise 6
 data Calendar = Calendar { prodID :: ProdID, version :: Version, events :: [Event] }
@@ -25,10 +28,13 @@ data Version = Version
     deriving (Eq, Ord, Show)
 
 data Event = Event { dtStamp :: DtStamp, uid :: Uid,  dtStart :: DtStart, 
-    dtEnd :: DtEnd, description :: Maybe Description, summary :: Maybe Summary, location :: Maybe Location }
+    dtEnd :: DtEnd, description :: Maybe Description, summary :: Maybe Summary,
+    location :: Maybe Location }
     deriving (Eq, Ord, Show)
 
-data EventProp = PropDtStamp DtStamp
+data EventProp = PropDtStamp DtStamp | PropUid Uid | PropDtStart DtStart 
+    | PropDtEnd DtEnd | PropDescription Description | PropSummary Summary
+    | PropLocation Location
 
 data DtStamp = DtStamp {runDtStamp :: DateTime}
     deriving (Eq, Ord, Show)
@@ -112,13 +118,163 @@ parseEvent = pack parseBeginEvent parseEvent' parseEndEvent
         parseBeginEvent = symbol Begin *> symbol (Section VEvent)
 
         parseEvent' :: Parser Token Event
-        parseEvent' = f <$> many parseEventProp
+        parseEvent' = ePropsToEvent <$> many parseEventProp
 
-        f :: [EventProp] -> Event
-        f = undefined
+        ePropsToEvent :: [EventProp] -> Event
+        ePropsToEvent eventprops = Event eDtStamp eUid eDtStart eDtEnd eDescription eSummary eLocation
+            where
+                eDtStamp | length dtStamps == 1 = toDtStamp (head dtStamps)
+                         | null dtStamps = error "No dtStamp found." 
+                         | otherwise = error "Multiple dtStamps found."
+                
+                dtStamps = filter (\case
+                                    PropDtStamp ep -> True
+                                    _ -> False) eventprops
+
+                toDtStamp :: EventProp -> DtStamp
+                toDtStamp (PropDtStamp stamp) = stamp
+                toDtStamp _ = error "Input is not a DtStamp."
+
+
+
+
+                eUid | length uids == 1 = toUid (head uids)
+                     | null uids = error "No uid found." 
+                     | otherwise = error "Multiple uids found."
+                
+                uids = filter (\case
+                                    PropUid _ -> True
+                                    _ -> False) eventprops
+
+                toUid :: EventProp -> Uid
+                toUid (PropUid id) = id
+                toUid _ = error "Input is not a uid."
+
+
+                
+                eDtStart | length dtStarts == 1 = toDtStart (head dtStarts)
+                     | null dtStarts = error "No dtStart found." 
+                     | otherwise = error "Multiple dtStarts found."
+                
+                dtStarts = filter (\case
+                                    PropDtStart _ -> True
+                                    _ -> False) eventprops
+
+                toDtStart :: EventProp -> DtStart
+                toDtStart (PropDtStart start) = start
+                toDtStart _ = error "Input is not a dtStart."
+
+
+                
+                eDtEnd | length dtEnds == 1 = toDtEnd (head dtEnds)
+                     | null dtEnds = error "No dtEnd found." 
+                     | otherwise = error "Multiple dtEnds found."
+                
+                dtEnds = filter (\case
+                                    PropDtEnd _ -> True
+                                    _ -> False) eventprops
+
+                toDtEnd :: EventProp -> DtEnd
+                toDtEnd (PropDtEnd end) = end
+                toDtEnd _ = error "Input is not a dtEnd."
+
+
+
+                eDescription :: Maybe Description
+                eDescription | length descriptions == 1 = Just $ toDescription (head descriptions)
+                     | null descriptions = Nothing
+                     | otherwise = error "Multiple descriptions found."
+                
+                descriptions = filter (\case
+                                    PropDescription _ -> True
+                                    _ -> False) eventprops
+
+                toDescription :: EventProp -> Description
+                toDescription (PropDescription descr) = descr
+                toDescription _ = error "Input is not a description."
+
+
+
+
+                eSummary :: Maybe Summary
+                eSummary | length summaries == 1 = Just $ toSummary (head summaries)
+                         | null summaries = Nothing
+                         | otherwise = error "Multiple summaries found."
+                
+                summaries = filter (\case
+                                    PropSummary _ -> True
+                                    _ -> False) eventprops
+
+                toSummary :: EventProp -> Summary
+                toSummary (PropSummary sum) = sum
+                toSummary _ = error "Input is not a summary."
+
+
+
+
+                eLocation :: Maybe Location
+                eLocation | length locations == 1 = Just $ toLocation (head locations)
+                         | null locations = Nothing
+                         | otherwise = error "Multiple locations found."
+                
+                locations = filter (\case
+                                    PropLocation _ -> True
+                                    _ -> False) eventprops
+
+                toLocation :: EventProp -> Location
+                toLocation (PropLocation loc) = loc
+                toLocation _ = error "Input is not a location."
 
         parseEventProp :: Parser Token EventProp
-        parseEventProp = undefined
+        parseEventProp = parsePropDtStamp <|> parsePropUid <|> parsePropDtStart
+            <|> parsePropDtEnd <|> parsePropDescription <|> parsePropSummary
+            <|> parsePropLocation
+
+        isContent :: Token -> Bool
+        isContent (Content _) = True
+        isContent _ = False
+
+        parsePropDtStamp :: Parser Token EventProp
+        parsePropDtStamp = stampTokenToProp <$> (symbol (Title "DTSTAMP") *> satisfy isContent)
+
+        stampTokenToProp :: Token -> EventProp
+        stampTokenToProp (Content c) = PropDtStamp (DtStamp (fromJust (run parseDateTime c)))
+
+        parsePropUid :: Parser Token EventProp
+        parsePropUid = uidTokenToProp <$> (symbol (Title "UID") *> satisfy isContent)
+
+        uidTokenToProp :: Token -> EventProp
+        uidTokenToProp (Content c) = PropUid (Uid c)
+
+        parsePropDtStart :: Parser Token EventProp
+        parsePropDtStart = startTokenToProp <$> (symbol (Title "DTSTART") *> satisfy isContent)
+
+        startTokenToProp :: Token -> EventProp
+        startTokenToProp (Content c) = PropDtStart (DtStart (fromJust (run parseDateTime c)))
+
+        parsePropDtEnd :: Parser Token EventProp
+        parsePropDtEnd = endTokenToProp <$> (symbol (Title "DTEND") *> satisfy isContent)
+
+        endTokenToProp :: Token -> EventProp
+        endTokenToProp (Content c) = PropDtEnd (DtEnd (fromJust (run parseDateTime c)))
+
+        parsePropDescription :: Parser Token EventProp
+        parsePropDescription = descrTokenToProp <$> (symbol (Title "DESCRIPTION") *> satisfy isContent)
+
+        descrTokenToProp :: Token -> EventProp
+        descrTokenToProp (Content c) = PropDescription (Description c)
+
+        parsePropSummary :: Parser Token EventProp
+        parsePropSummary = summTokenToProp <$> (symbol (Title "SUMMARY") *> satisfy isContent)
+        
+        summTokenToProp :: Token -> EventProp
+        summTokenToProp (Content c) = PropSummary (Summary c)
+
+        parsePropLocation :: Parser Token EventProp
+        parsePropLocation = locationTokenToProp <$> (symbol (Title "LOCATION") *> satisfy isContent)
+
+        locationTokenToProp :: Token -> EventProp
+        locationTokenToProp (Content c) = PropLocation (Location c)
 
         parseEndEvent :: Parser Token Token
         parseEndEvent = symbol End *> symbol (Section VEvent)
