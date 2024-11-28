@@ -132,7 +132,7 @@ checkDateTime datetime = checkDate (date datetime) && checkTime (time datetime)
     checkDate date = checkYear (year date) && checkMonth (month date) && checkDay date
 
     checkYear :: Year -> Bool
-    checkYear year = let ry = runYear year in checkInRange ry (0, 9999)
+    checkYear year = let ry = runYear year in checkInRange ry (1, 9999)
     checkMonth :: Month -> Bool
     checkMonth month = let m = runMonth month in checkInRange m (1, 12) 
     checkDay :: Date -> Bool

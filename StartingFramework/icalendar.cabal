@@ -23,7 +23,8 @@ library
   build-depends:       array,
                        base >=4.14,
                        containers,
-                       uu-tc == 2024.1.1
+                       uu-tc == 2024.1.1,
+                       split
 
   hs-source-dirs:      src
 
