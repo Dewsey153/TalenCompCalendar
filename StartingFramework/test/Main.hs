@@ -3,7 +3,11 @@
 -- echo "19970610T172345Z" | cabal run
 -- cat examples/bastille.ics | cabal run
 -- Feel free to use ghci instead, or to change functions here to test whatever you want.
--- We'll ignore anything in this file when grading!
+-- We'll ignore anything in this file when grading! 
+
+-- This assignment was completed by:
+-- Luc Goltstein (8862729)
+-- Rens de Wit (2634678)
 
 
 module Main where
