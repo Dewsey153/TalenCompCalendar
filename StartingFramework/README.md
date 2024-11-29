@@ -1,3 +1,11 @@
+# This assignment was completed by:
+# Luc Goltstein (8862729)
+# Rens de Wit (2634678)
+
+
+
+
+
 # B3TC Lab 1
 
 This directory contains an un-finished parser for a subset of the [iCalendar file format]
