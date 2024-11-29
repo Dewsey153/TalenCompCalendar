@@ -23,7 +23,7 @@ data Calendar = Calendar { prodID :: ProdID, version :: Version, events :: [Even
 -- A container type to accomodate the fact that these can appear in different orders.
 data CalProp = PropProdID ProdID | PropVersion Version
 
--- The prodID, represented as a String
+-- The prodID, the identifier for the calendar, represented as a String
 data ProdID = ProdID { runProdID :: String }
     deriving (Eq, Ord, Show)
 
@@ -31,7 +31,8 @@ data ProdID = ProdID { runProdID :: String }
 data Version = Version
     deriving (Eq, Ord, Show)
 
--- An event, consisting of a datestamp, uid, datestart, dateend, description, summary and location. The last 3 are optional.
+-- An event, consisting of a datestamp, uid, datestart, dateend, description, 
+-- summary and location. The last 3 are optional.
 data Event = Event { dtStamp :: DtStamp, uid :: Uid,  dtStart :: DtStart, 
     dtEnd :: DtEnd, description :: Maybe Description, summary :: Maybe Summary,
     location :: Maybe Location }
@@ -46,7 +47,7 @@ data EventProp = PropDtStamp DtStamp | PropUid Uid | PropDtStart DtStart
 data DtStamp = DtStamp {runDtStamp :: DateTime}
     deriving (Eq, Ord, Show)
 
---The Uid, represented as a string
+--The Uid, the identifier for an event, represented as a string
 data Uid = Uid {runUid :: String}
     deriving (Eq, Ord, Show)
 
@@ -58,7 +59,7 @@ data DtStart = DtStart {runDtStart :: DateTime}
 data DtEnd = DtEnd {runDtEnd:: DateTime}
     deriving (Eq, Ord, Show)
 
--- The desccription, represented as string
+-- The description, represented as string
 data Description = Description {runDescription :: String}
     deriving (Eq, Ord, Show)
 
@@ -87,7 +88,7 @@ lexCalendar = greedy lexToken
         -- input contains "\r\n"
         lexToken :: Parser Char Token
         -- If the text is not a title, check whether it is a section. If not, check if it is DateTime, otherwise it must be content.
-        -- This is to prevent that sections or titles get parsed as content.
+        -- This is to prevent that titles, sections or datetimes get parsed as content.
         lexToken = lexBegin <|> lexEnd <|> (lexTitle <<|> (lexSection <<|> (lexDateTime <<|> lexContent)))
 
         lexBegin :: Parser Char Token
