@@ -87,9 +87,8 @@ lexCalendar = greedy lexToken
     where
         -- input contains "\r\n"
         lexToken :: Parser Char Token
-        -- If the text is not a title, check whether it is a section. If not, check if it is DateTime, otherwise it must be content.
-        -- This is to prevent that titles, sections or datetimes get parsed as content.
-        lexToken = lexBegin <|> lexEnd <|> (lexTitle <<|> (lexSection <<|> (lexDateTime <<|> lexContent)))
+        -- Only lex to Content if it cannot be lexed to any other Token.
+        lexToken = (lexBegin <|> lexEnd <|> lexTitle <|> lexSection <|> lexDateTime) <<|> lexContent
 
         lexBegin :: Parser Char Token
         lexBegin =  Begin <$ token "BEGIN:"
