@@ -1,3 +1,5 @@
+{-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
+{-# HLINT ignore "Redundant bracket" #-}
 module Features where
 
 import DateTime
@@ -59,6 +61,7 @@ checkOverlapping calendar = any (eventOverlaps calendar) (events calendar)
         eventOverlaps :: Calendar -> Event -> Bool
         eventOverlaps c e = any (\ev -> ev /= e && dateTimeInEvent (startDateTime e) ev) (events c)
 
+-- Checks for a given summary how many time is spent on all events with said summary.
 timeSpent :: String -> Calendar -> Int
 timeSpent summ cal = sum $ map timeSpentEvent matchingEvents
     where matchingEvents = eventsWithSummary summ cal
@@ -81,6 +84,7 @@ eventsWithSummary sum cal = filter
 getEventSummary :: Event -> Maybe Summary
 getEventSummary = summary
 
+-- Calculates the amount of minutes between 2 datetimes.
 timeSpanToMinutes :: DateTime -> DateTime -> Int
 timeSpanToMinutes x y = dateMinutes dateTime2 - dateMinutes dateTime1
     where

@@ -16,61 +16,77 @@ import Control.Monad (replicateM)
 import Data.Maybe
 
 -- Exercise 6
+-- A calendar consists of the prodID, version and a list of events
 data Calendar = Calendar { prodID :: ProdID, version :: Version, events :: [Event] }
     deriving (Eq, Ord, Show)
 
+-- A container type to accomodate the fact that these can appear in different orders.
 data CalProp = PropProdID ProdID | PropVersion Version
 
+-- The prodID, represented as a String
 data ProdID = ProdID { runProdID :: String }
     deriving (Eq, Ord, Show)
 
+-- The version, which just exists to facilitate correct parsing
 data Version = Version
     deriving (Eq, Ord, Show)
 
+-- An event, consisting of a datestamp, uid, datestart, dateend, description, summary and location. The last 3 are optional.
 data Event = Event { dtStamp :: DtStamp, uid :: Uid,  dtStart :: DtStart, 
     dtEnd :: DtEnd, description :: Maybe Description, summary :: Maybe Summary,
     location :: Maybe Location }
     deriving (Eq, Ord, Show)
 
+-- A container type for everything an event may contain.
 data EventProp = PropDtStamp DtStamp | PropUid Uid | PropDtStart DtStart 
     | PropDtEnd DtEnd | PropDescription Description | PropSummary Summary
     | PropLocation Location
 
+-- The datestamp, represented as DateTime
 data DtStamp = DtStamp {runDtStamp :: DateTime}
     deriving (Eq, Ord, Show)
 
+--The Uid, represented as a string
 data Uid = Uid {runUid :: String}
     deriving (Eq, Ord, Show)
 
+-- The datestart, represented as DateTime
 data DtStart = DtStart {runDtStart :: DateTime}
     deriving (Eq, Ord, Show)
 
+-- The dateend, represented as DateTime
 data DtEnd = DtEnd {runDtEnd:: DateTime}
     deriving (Eq, Ord, Show)
 
+-- The desccription, represented as string
 data Description = Description {runDescription :: String}
     deriving (Eq, Ord, Show)
 
+-- The summary, represented as string
 data Summary = Summary {runSummary :: String}
     deriving (Eq, Ord, Show)
 
+-- The location, represented as string
 data Location = Location {runLocation :: String}
     deriving (Eq, Ord, Show)
 
 -- Exercise 7
+-- Token datatype for necessary elements found during lexing.
 data Token = Begin | End | Title String | Content String | Section Section 
     | DateTimeToken DateTime
     deriving (Eq, Ord, Show)
 
+-- Datatype to represent the sections found during lexing and parsing
 data Section = VCalendar | VEvent
     deriving (Eq, Ord, Show)
 
+-- Converts input string into a list of workable tokens
 lexCalendar :: Parser Char [Token]
 lexCalendar = greedy lexToken
     where
         -- input contains "\r\n"
         lexToken :: Parser Char Token
-        -- If the text is not a title, check whether it is a section. If not, it must be content.
+        -- If the text is not a title, check whether it is a section. If not, check if it is DateTime, otherwise it must be content.
         -- This is to prevent that sections or titles get parsed as content.
         lexToken = lexBegin <|> lexEnd <|> (lexTitle <<|> (lexSection <<|> (lexDateTime <<|> lexContent)))
 
@@ -92,6 +108,7 @@ lexCalendar = greedy lexToken
 parseText :: Parser Char String
 parseText = (++) <$> greedy (satisfy (/='\r')) <*> ((token "\r\n " *> parseText) <<|> "" <$ token "\r\n")
 
+-- Parses set of tokens to valid calendar
 parseCalendar :: Parser Token Calendar
 parseCalendar = pack parseBeginCalendar parseCalendar' parseEndCalendar
     where
@@ -115,15 +132,17 @@ parseCalendar = pack parseBeginCalendar parseCalendar' parseEndCalendar
         parseVersion :: Parser Token CalProp
         parseVersion = PropVersion Version <$ (symbol (Title "VERSION") *> symbol (Content "2.0"))
 
-parseEvent :: Parser Token Event
+parseEvent :: Parser Token Event --Parses individual events
 parseEvent = pack parseBeginEvent parseEvent' parseEndEvent
     where
         parseBeginEvent :: Parser Token Token
         parseBeginEvent = symbol Begin *> symbol (Section VEvent)
-
+        
+        --Assuming the lexing created a valid list of properties for the events, we greedily parse them.
         parseEvent' :: Parser Token Event
         parseEvent' = ePropsToEvent <$> greedy parseEventProp
-
+        
+        --For each property we validate its type and the amount in the list.
         ePropsToEvent :: [EventProp] -> Event
         ePropsToEvent eventprops = Event eDtStamp eUid eDtStart eDtEnd eDescription eSummary eLocation
             where
@@ -229,6 +248,7 @@ parseEvent = pack parseBeginEvent parseEvent' parseEndEvent
                 toLocation (PropLocation loc) = loc
                 toLocation _ = error "Input is not a location."
 
+        -- Parses individual properties, functions below validate types and convert for each type.
         parseEventProp :: Parser Token EventProp
         parseEventProp = parsePropDtStamp <|> parsePropUid <|> parsePropDtStart
             <|> parsePropDtEnd <|> parsePropDescription <|> parsePropSummary
