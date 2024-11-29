@@ -66,6 +66,7 @@ timeSpent :: String -> Calendar -> Int
 timeSpent summ cal = sum $ map timeSpentEvent matchingEvents
     where matchingEvents = eventsWithSummary summ cal
 
+-- Returns the amount of minutes spent on the given event
 timeSpentEvent :: Event -> Int
 timeSpentEvent e = timeSpanToMinutes d1 d2
     where

@@ -138,7 +138,10 @@ parseEvent = pack parseBeginEvent parseEvent' parseEndEvent
         parseBeginEvent :: Parser Token Token
         parseBeginEvent = symbol Begin *> symbol (Section VEvent)
         
-        --Assuming the lexing created a valid list of properties for the events, we greedily parse them.
+        --We greedily parse the tokens which describe event properties.
+        --We do this greedily, so we can be sure that ePropsToEvent gets a list of all available event props.
+        --Then, we can throw meaningful errors in ePropsToEvent if some event props are missing
+        --or have multiple declarations.
         parseEvent' :: Parser Token Event
         parseEvent' = ePropsToEvent <$> greedy parseEventProp
         
